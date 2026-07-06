@@ -1,0 +1,28 @@
+name: ci
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - run: python -m py_compile app.py
+      - name: converter unit check
+        run: |
+          python - <<'PY'
+          import app, yaml
+          doc=yaml.safe_load('''
+          detection:
+            sel:
+              Image|endswith: /gcc
+              CommandLine|contains: -wrapper
+            condition: sel
+          ''')
+          q,sup,note=app.sigma_to_opensearch(doc)
+          assert sup, note
+          assert 'bool' in q
+          print('converter ok')
+          PY
