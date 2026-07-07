@@ -326,7 +326,7 @@ button:hover{opacity:.9}.ok{color:var(--ok)}.bad{color:var(--hi)}
 h2{font-size:13px;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin:0 0 10px}
 .dep{color:var(--ok);font-size:10px}
 </style></head><body><a href="/manual" target="_blank" title="Manual / Help" style="position:fixed;top:12px;right:14px;z-index:99999;width:30px;height:30px;border-radius:50%;background:#161b22;border:1px solid #30363d;color:#58a6ff;font:700 16px/30px system-ui,sans-serif;text-align:center;text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,.4)" onmouseover="this.style.borderColor='#58a6ff'" onmouseout="this.style.borderColor='#30363d'">?</a>
-<header><h1>SOC-DETECTIONS <small>Sigma · detection-as-code</small></h1>
+<header><h1>SOC Detections <small>Sigma · detection-as-code</small></h1>
 <div class="meta" id="meta">loading…</div></header>
 <div class="wrap">
   <div class="kpis">
