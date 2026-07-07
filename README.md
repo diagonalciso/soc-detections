@@ -47,3 +47,8 @@ start at `WAZUH_BASE_ID` (default 100000, the local-rules range).
 ## License
 App: MIT. Sigma rules: Detection Rule License 1.1 (redistribution allowed).
 No copyleft on this code.
+
+
+## Documentation
+
+See **[MANUAL.md](MANUAL.md)** for the full manual (overview, configuration, endpoints, integration, troubleshooting). In the running dashboard, click the **`?` Help button** in the top-right corner to open it at `/manual`.

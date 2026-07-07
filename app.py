@@ -325,7 +325,7 @@ button{background:var(--accent);color:#fff;border:none;border-radius:6px;padding
 button:hover{opacity:.9}.ok{color:var(--ok)}.bad{color:var(--hi)}
 h2{font-size:13px;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin:0 0 10px}
 .dep{color:var(--ok);font-size:10px}
-</style></head><body>
+</style></head><body><a href="/manual" target="_blank" title="Manual / Help" style="position:fixed;top:12px;right:14px;z-index:99999;width:30px;height:30px;border-radius:50%;background:#161b22;border:1px solid #30363d;color:#58a6ff;font:700 16px/30px system-ui,sans-serif;text-align:center;text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,.4)" onmouseover="this.style.borderColor='#58a6ff'" onmouseout="this.style.borderColor='#30363d'">?</a>
 <header><h1>SOC-DETECTIONS <small>Sigma · detection-as-code</small></h1>
 <div class="meta" id="meta">loading…</div></header>
 <div class="wrap">
@@ -400,6 +400,8 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body if isinstance(body, bytes) else body.encode())
 
     def do_GET(self):
+        if self.path.split("?")[0].rstrip("/") == "/manual":
+            _serve_manual(self); return
         u = urlparse(self.path)
         q = parse_qs(u.query)
         if u.path in ("/", "/index.html"):
@@ -454,6 +456,106 @@ class Handler(BaseHTTPRequestHandler):
     def log_message(self, *a):
         pass
 
+
+
+
+# ---- injected: /manual help page (stdlib markdown renderer) ----------------
+def _md_to_html(md):
+    import html, re as _re
+    lines = md.split("\n")
+    out = []; i = 0; n = len(lines)
+    def inline(t):
+        t = html.escape(t)
+        t = _re.sub(r"`([^`]+)`", r"<code>\1</code>", t)
+        t = _re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", t)
+        t = _re.sub(r"\[([^\]]+)\]\((https?://[^)]+)\)",
+                    r'<a href="\2" target="_blank" rel="noopener">\1</a>', t)
+        return t
+    while i < n:
+        ln = lines[i]
+        if ln.startswith("```"):
+            i += 1; buf = []
+            while i < n and not lines[i].startswith("```"):
+                buf.append(html.escape(lines[i])); i += 1
+            i += 1
+            out.append("<pre><code>" + "\n".join(buf) + "</code></pre>"); continue
+        m = _re.match(r"(#{1,6})\s+(.*)", ln)
+        if m:
+            lv = len(m.group(1)); out.append("<h%d>%s</h%d>" % (lv, inline(m.group(2)), lv)); i += 1; continue
+        if _re.match(r"\s*[-*]\s+", ln):
+            out.append("<ul>")
+            while i < n and _re.match(r"\s*[-*]\s+", lines[i]):
+                out.append("<li>" + inline(_re.sub(r"\s*[-*]\s+", "", lines[i], count=1)) + "</li>"); i += 1
+            out.append("</ul>"); continue
+        if _re.match(r"\s*\d+\.\s+", ln):
+            out.append("<ol>")
+            while i < n and _re.match(r"\s*\d+\.\s+", lines[i]):
+                out.append("<li>" + inline(_re.sub(r"\s*\d+\.\s+", "", lines[i], count=1)) + "</li>"); i += 1
+            out.append("</ol>"); continue
+        if ln.strip().startswith("|") and i + 1 < n and _re.match(r"^\s*\|[-:\s|]+\|\s*$", lines[i+1]):
+            hdr = [c.strip() for c in ln.strip().strip("|").split("|")]
+            out.append("<table><thead><tr>" + "".join("<th>%s</th>" % inline(c) for c in hdr) + "</tr></thead><tbody>")
+            i += 2
+            while i < n and lines[i].strip().startswith("|"):
+                cells = [c.strip() for c in lines[i].strip().strip("|").split("|")]
+                out.append("<tr>" + "".join("<td>%s</td>" % inline(c) for c in cells) + "</tr>"); i += 1
+            out.append("</tbody></table>"); continue
+        if _re.match(r"^\s*---+\s*$", ln):
+            out.append("<hr>"); i += 1; continue
+        if ln.strip() == "":
+            i += 1; continue
+        para = [ln]; i += 1
+        while i < n and lines[i].strip() and not _re.match(r"(#{1,6}\s|```|\s*[-*]\s|\s*\d+\.\s|\|)", lines[i]):
+            para.append(lines[i]); i += 1
+        out.append("<p>" + inline(" ".join(para)) + "</p>")
+    return "\n".join(out)
+
+
+def _manual_page(inner):
+    return ("""<!DOCTYPE html><html><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>Manual</title><style>
+:root{--bg:#0d1117;--sf:#161b22;--bd:#30363d;--tx:#e6edf3;--mut:#8b949e;--ac:#58a6ff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);
+font:15px/1.65 -apple-system,Segoe UI,Roboto,sans-serif}
+.wrap{max-width:860px;margin:0 auto;padding:32px 22px 80px}
+.top{position:sticky;top:0;background:rgba(13,17,23,.92);backdrop-filter:blur(6px);
+border-bottom:1px solid var(--bd);margin:-32px -22px 24px;padding:12px 22px;display:flex;
+align-items:center;gap:12px}
+.top a{color:var(--ac);text-decoration:none;font-size:13px}
+h1,h2,h3,h4{color:#fff;line-height:1.25;margin:1.5em 0 .5em}
+h1{font-size:26px;border-bottom:1px solid var(--bd);padding-bottom:.3em}
+h2{font-size:20px;border-bottom:1px solid var(--bd);padding-bottom:.25em}
+h3{font-size:16px}a{color:var(--ac)}
+code{background:var(--sf);border:1px solid var(--bd);border-radius:4px;padding:1px 5px;
+font:13px/1.4 ui-monospace,Menlo,monospace}
+pre{background:var(--sf);border:1px solid var(--bd);border-radius:8px;padding:14px 16px;
+overflow:auto}pre code{background:none;border:0;padding:0}
+ul,ol{padding-left:1.4em}li{margin:.25em 0}
+table{border-collapse:collapse;width:100%;margin:1em 0;font-size:14px}
+th,td{border:1px solid var(--bd);padding:7px 10px;text-align:left}
+th{background:var(--sf)}hr{border:0;border-top:1px solid var(--bd);margin:2em 0}
+.mut{color:var(--mut)}
+</style></head><body><div class=wrap>
+<div class=top><a href="/">&larr; Back to app</a><span class=mut>&middot; Manual</span></div>
+""" + inner + "\n</div></body></html>")
+
+
+def _serve_manual(handler):
+    import os as _os
+    p = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "MANUAL.md")
+    try:
+        with open(p, encoding="utf-8") as _fh:
+            md = _fh.read()
+    except OSError:
+        md = "# Manual\n\nMANUAL.md not found next to the application."
+    body = _manual_page(_md_to_html(md)).encode("utf-8")
+    handler.send_response(200)
+    handler.send_header("Content-Type", "text/html; charset=utf-8")
+    handler.send_header("Content-Length", str(len(body)))
+    handler.end_headers()
+    handler.wfile.write(body)
+# ---- end injected block -----------------------------------------------------
 
 if __name__ == "__main__":
     _init_db()
