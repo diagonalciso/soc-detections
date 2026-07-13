@@ -2,6 +2,11 @@
 
 > Sigma-to-OpenSearch/Wazuh detection-rule converter and manager — self-hosted, dependency-free.
 
+<p align="center">
+  <img src="docs/screenshot.png" alt="soc-detections dashboard screenshot" width="100%">
+</p>
+
+
 Detection-content management for the SOC suite. Indexes the **SigmaHQ** rule
 library, lets the SOC browse by product / category / level / ATT&CK, and converts
 a rule into an **OpenSearch query** and a **Wazuh rule-XML skeleton**. Tracks which
